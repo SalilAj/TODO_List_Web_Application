@@ -1,4 +1,4 @@
-package Salil.DBWrapper;
+package ie.tcd.ajgaonks.DBWrapper;
 
 import junit.framework.Test;
 import junit.framework.TestCase;

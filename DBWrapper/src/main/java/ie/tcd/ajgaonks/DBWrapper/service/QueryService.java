@@ -10,27 +10,24 @@ import java.util.ArrayList;
 
 import org.bson.Document;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.UpdateOptions;
+import static com.mongodb.client.model.Filters.*;
 
 import ie.tcd.ajgaonks.DBWrapper.beans.MemberInfoObject;
 import ie.tcd.ajgaonks.DBWrapper.beans.TaskDoc;
 import ie.tcd.ajgaonks.DBWrapper.beans.TasksObject;
 
 @PropertySource(value = "classpath:application.yml")
-
 @Service
 public class QueryService {
 
-	@Value("${mongoDB.userName}")
-	String mongoUserName;
+	private static final Logger LOGGER = LoggerFactory.getLogger(QueryService.class);
 
-	@Value("${mongoDB.password}")
-	String mongoPassword;
+	MongoClient mongoClient;
 
 	@Value("${mongoDB.databaseName}")
 	String dbName;
@@ -41,22 +38,28 @@ public class QueryService {
 	@Value("${mongoDB.taskCollection}")
 	String taskCollection;
 
-	@Value("${mongoDB.clientURI}")
-	String mongoClientURI;
+	@Value("${mongoDB.host}")
+	String mongoHost;
 
-	MongoClient mongoClient = new MongoClient(new MongoClientURI(mongoClientURI));
+	@Value("${mongoDB.port}")
+	Integer mongoPort;
 
 	public boolean dbInstanceExistence() {
 		if (mongoClient != null) {
 			return true;
 		} else {
-			createDbInstance();
+			try {
+				createDbInstance();
+			} catch (Exception e) {
+				LOGGER.error(e.getMessage());
+				return false;
+			}
 			return true;
 		}
 	}
 
 	public MongoClient createDbInstance() {
-		mongoClient = new MongoClient(new MongoClientURI(mongoClientURI));
+		mongoClient = new MongoClient("localhost", 27017);
 		return mongoClient;
 	}
 
@@ -64,7 +67,7 @@ public class QueryService {
 		dbInstanceExistence();
 
 		MongoDatabase database = mongoClient.getDatabase(dbName);
-		MongoCollection<Document> collection = database.getCollection(memberCollection);
+		MongoCollection<Document> collection = database.getCollection("memberInfo");
 
 		Document member = new Document("memberId", memberInfo.getMemberId())
 				.append("firstName", memberInfo.getFirstName()).append("lastName", memberInfo.getLastName())
@@ -81,25 +84,19 @@ public class QueryService {
 		dbInstanceExistence();
 
 		MongoDatabase database = mongoClient.getDatabase(dbName);
-		MongoCollection<Document> collection = database.getCollection(memberCollection);
-		
-		if(email != null)
-		{
-			Document member = new Document("email", email);
-			FindIterable<Document> results = collection.find(member);
+		MongoCollection<Document> collection = database.getCollection("memberInfo");
 
-			for (Document doc : results) {
-				memberInfo = new MemberInfoObject();
-				memberInfo.setMemberId(doc.getString("memberId"));
-				memberInfo.setFirstName(doc.getString("firstName"));
-				memberInfo.setLastName(doc.getString("lastName"));
-				memberInfo.setPassword(doc.getString("email"));
-				memberInfo.setPassword(doc.getString("password"));
-				break;
-			}
-		}
-		else {
-			//Error;
+		Document member = new Document("email", email);
+		FindIterable<Document> results = collection.find(member);
+
+		for (Document doc : results) {
+			memberInfo = new MemberInfoObject();
+			memberInfo.setMemberId(doc.getString("memberId"));
+			memberInfo.setFirstName(doc.getString("firstName"));
+			memberInfo.setLastName(doc.getString("lastName"));
+			memberInfo.setEmail(doc.getString("email"));
+			memberInfo.setPassword(doc.getString("password"));
+			break;
 		}
 
 		return memberInfo;
@@ -110,12 +107,13 @@ public class QueryService {
 		dbInstanceExistence();
 
 		MongoDatabase database = mongoClient.getDatabase(dbName);
-		MongoCollection<Document> collection = database.getCollection(taskCollection);
+		MongoCollection<Document> collection = database.getCollection("memberTasks");
 
-		BasicDBObject addToSet = new BasicDBObject("$addToSet", new BasicDBObject("tasks", taskObj));
-		BasicDBObject filter = new BasicDBObject("memberId", memberId);
-		
-		collection.updateOne(filter, addToSet);
+		UpdateOptions updateOp = new UpdateOptions();
+		collection.updateOne(eq("memberId", memberId),
+				new Document("$addToSet",
+						new Document("tasks", new Document("id", taskObj.getId()).append("task", taskObj.getTask()))),
+				updateOp.upsert(true));
 
 	}
 
@@ -123,9 +121,10 @@ public class QueryService {
 
 		TasksObject memberTasks = null;
 		dbInstanceExistence();
+		ArrayList<TaskDoc> tasks = new ArrayList<TaskDoc>();
 
 		MongoDatabase database = mongoClient.getDatabase(dbName);
-		MongoCollection<Document> collection = database.getCollection(taskCollection);
+		MongoCollection<Document> collection = database.getCollection("memberTasks");
 
 		Document member = new Document("memberId", memberId);
 		FindIterable<Document> results = collection.find(member);
@@ -133,24 +132,27 @@ public class QueryService {
 		for (Document doc : results) {
 			memberTasks = new TasksObject();
 			memberTasks.setMemberId(doc.getString("memberId"));
-			ArrayList<TaskDoc> taskList = (ArrayList<TaskDoc>) doc.get("tasks");
-			memberTasks.setTask(taskList);
+			ArrayList<Document> taskList = (ArrayList<Document>) doc.get("tasks");
+			for (Document task : taskList) {
+				TaskDoc taskDoc = new TaskDoc();
+				taskDoc.setId(task.getString("id"));
+				taskDoc.setTask(task.getString("task"));
+				tasks.add(taskDoc);
+			}
+			memberTasks.setTask(tasks);
 			break;
 		}
 
 		return memberTasks;
 	}
 
-	public void deleteTask(String memberId, String taskId)
-	{
+	public void deleteTask(String memberId, String taskId) {
 		dbInstanceExistence();
 
 		MongoDatabase database = mongoClient.getDatabase(dbName);
-		MongoCollection<Document> collection = database.getCollection(taskCollection);
-		
-		BasicDBObject pull = new BasicDBObject("$pull", new BasicDBObject("tasks", new BasicDBObject("taskId",taskId)));
-		BasicDBObject filter = new BasicDBObject("memberId", memberId);
-		
-		collection.updateOne(filter, pull);
+		MongoCollection<Document> collection = database.getCollection("memberTasks");
+
+		collection.updateOne(eq("memberId", memberId),
+				new Document("$pull", new Document("tasks", new Document("id", taskId))));
 	}
 }

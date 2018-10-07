@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: DBWrapper
+server:
+  port: 8058
+mongoDB:
+  databaseName: todo
+  memberCollection: memberInfo
+  taskCollection: memberTasks
+  host: localhost
+  port: 27017

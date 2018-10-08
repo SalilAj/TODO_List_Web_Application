@@ -58,7 +58,7 @@ The backend web service is created using Spring MVC framework.<br />
 ### Front End functionality (Javascript Server using ReactJs)
 ReactJS is a component based Javascript Library used for building interactive user interfaces. It is built using reusable components which helps in faster rendering of webpages.
 
-![alt text](https://www.github.com/SalilAj/TODO_List_Web_Application/master/123.png
+![alt text](https://github.com/SalilAj/TODO_List_Web_Application/blob/master/123.png)
 
 **Currently working on**
 

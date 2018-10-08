@@ -55,6 +55,13 @@ Ideally for security and database access convenience all external services inter
 The backend web service is created using Spring MVC framework.<br />
 **Since no data computation is required for a 'TODO List' Web application there was no point in separating the web service and the db wrapper service. The web service will only act as a data router between the db-wrapper and the frontend. Thus in this project the db-wrapper itself acts as a back end web server to the front end server**
 
+Functions:
+1) addMemberData (* Adds the User details to Mongo Database)
+2) getMemberData (* Retrieves the User details from Mongo Database)
+3) getMemberTasks (* Retrieves the User tasks list from Mongo Database after successful authentication)
+4) addMemberTask (* Adds the newly created task to the users *memberTasks* collection document)
+5) deleteMemberTask (* Deletes the task specified by the user from the users *memberTasks* collection document)
+
 ### Front End functionality (Javascript Server using ReactJs)
 ReactJS is a component based Javascript Library used for building interactive user interfaces. It is built using reusable components which helps in faster rendering of webpages.
 

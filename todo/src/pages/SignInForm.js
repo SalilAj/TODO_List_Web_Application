@@ -16,7 +16,7 @@ class SignInForm extends Component {
 
     handleChange(e) {
         let target = e.target;
-        let value = target.type === 'checkbox' ? target.checked : target.value;
+        let value = target.value;
         let name = target.name;
 
         this.setState({
@@ -26,11 +26,16 @@ class SignInForm extends Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        //call get member details
-        //redirect to home.html
+        window.location.href = 'http://localhost:3000/home'
+        fetch('https://localhost:8058/db-wrapper-service/getMemberData?email=' + this.email)
+        .then(this.handleRedirect)
 
         console.log('The form was submitted with the following data:');
         console.log(this.state);
+    }
+
+    handleRedirect(res){
+       window.location.href = 'http://localhost:3000/home'
     }
 
     render() {

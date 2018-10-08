@@ -18,21 +18,40 @@ class SignUpForm extends Component {
 
     handleChange(e) {
         let target = e.target;
-        let value = target.type === 'checkbox' ? target.checked : target.value;
-        let firstName = target.firstName;
+        let value = target.value;
+        let name = target.name;
 
         this.setState({
-          [firstName]: value
+          [name]: value
         });
     }
 
     handleSubmit(e) {
         e.preventDefault();
-        //call add member details
-        // redirect to sigin page
+        fetch('https://localhost:8058/db-wrapper-service/addMemberData',{
+          method: 'POST',
+          headers: {
+            'Accept':'application/json',
+            'Content-Type':'application/json',
+          },
+          body: JSON.stringify({
+            'firstName':this.state.firstName,
+            'lastName':this.state.lastName,
+            'email':this.state.email,
+            'password':this.state.password
+          })
+        }).then(this.handleRedirect)
 
         console.log('The form was submitted with the following data:');
         console.log(this.state);
+
+    }
+
+    handleRedirect(res){
+      if(res.status === 200)
+      {
+       window.location.href = 'http://localhost:3000/#/react-auth-ui/sign-in' 
+      }
     }
 
     render() {

@@ -7,8 +7,8 @@ Considering the fact that the 'Todo'list needs to be persistent the list informa
 
 The architecture of the Web application is as follows:
 - MongoDB (Database)
-- Java Spring Boot (BackEnd Web Server)
-- Javascript Server (ReactJs) (FrontEnd Web Server)
+- Java Spring Boot (BackEnd Web Server) **(*refer DBWrapper Folder)**
+- Javascript Server (ReactJs) (FrontEnd Web Server) **(*refer todo Folder)**
 
 ### Data Modelling (MongoDB)
 To maintain persistence of the Users todo list the Web application needs to maintain a record of all users using the service as well as their 'todo' list information. This is information is stored in a single database in mongodb named *'todo'*. 
